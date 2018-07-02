@@ -280,16 +280,17 @@ func sliceContains(haystack []string, needle string) bool {
 }
 
 func GoogleLoggingAgent() Option {
+	// set agent client. It expects that the forward input fluentd plugin
+	// is properly configured by the Google logging agent, which is by default.
+	// See more at:
+	// https://cloud.google.com/error-reporting/docs/setup/ec2
+	return GoogleLoggingAgentWithConfig(fluent.Config{AsyncConnect: true})
+}
+
+func GoogleLoggingAgentWithConfig(cfg fluent.Config) Option {
 	return func(sh *StackdriverHook) error {
 		var err error
-		// set agent client. It expects that the forward input fluentd plugin
-		// is properly configured by the Google logging agent, which is by default.
-		// See more at:
-		// https://cloud.google.com/error-reporting/docs/setup/ec2
-		sh.agentClient, err = fluent.New(fluent.Config{
-			AsyncConnect: true,
-			MaxRetry:     -1,
-		})
+		sh.agentClient, err = fluent.New(cfg)
 		if err != nil {
 			return fmt.Errorf("could not find fluentd agent on 127.0.0.1:24224")
 		}
